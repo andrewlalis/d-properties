@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/d-properties
+d-properties.so
+d-properties.dylib
+d-properties.dll
+d-properties.a
+d-properties.lib
+d-properties-test-*
+*.exe
+*.o
+*.obj
+*.lst
