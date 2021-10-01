@@ -5,7 +5,10 @@ import std.algorithm.sorting : sort;
 import std.regex;
 import d_properties.properties : Properties;
 
-enum SeparatorStyle : string {
+/** 
+ * The style of separator to use when writing.
+ */
+public enum SeparatorStyle : string {
     EQUALS = "=",
     EQUALS_SPACED = " = ",
     COLON = ":",
@@ -13,12 +16,24 @@ enum SeparatorStyle : string {
     SPACE = " "
 }
 
-enum CommentStyle : string {
+/** 
+ * The style of comment to use when writing.
+ */
+public enum CommentStyle : string {
     HASHTAG = "#",
     EXCLAMATION = "!"
 }
 
-void writeToFile(
+/** 
+ * Writes the given properties to a file.
+ * Params:
+ *   props = The properties to write.
+ *   filename = The name of the file to write to.
+ *   comment = A comment to place at the top of the file.
+ *   separatorStyle = The style to use when separating keys and values.
+ *   commentStyle = The style to use for comments.
+ */
+public void writeToFile(
     Properties props,
     string filename,
     string comment = null,
