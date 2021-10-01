@@ -1,7 +1,10 @@
 # d-properties
 D-language parser and serializer for Java-style properties files, which conforms to the [format specification on Wikipedia](https://en.wikipedia.org/wiki/.properties).
 
+View this library on [code.dlang.org's package listing](https://code.dlang.org/packages/d-properties).
+
 ## Usage
+Add this library to your project with `dub add d-properties`.
 
 ```d
 import std.stdio;
