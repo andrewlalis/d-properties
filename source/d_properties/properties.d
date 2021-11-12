@@ -48,7 +48,7 @@ public struct Properties {
      * Returns: The value of the property, or the default value if the property
      * doesn't exist.
      */
-    public string get(string key, string defaultValue=null) {
+    public string get(string key, string defaultValue=null) const {
         if (key !in values) return defaultValue;
         return values[key];
     }
@@ -83,7 +83,7 @@ public struct Properties {
      *   key = The property name.
      * Returns: The value of the property.
      */
-    string opIndex(string key) {
+    string opIndex(string key) const {
         if (key !in values) throw new MissingPropertyException(key);
         return values[key];
     }
@@ -98,10 +98,23 @@ public struct Properties {
         values[key] = value;
     }
 
-    bool opEquals(Properties other) {
+    /** 
+     * Determines if this properties object is equal to the other.
+     * Params:
+     *   other = The other properties to check for equality with.
+     * Returns: True if these properties are the same as those given.
+     */
+    bool opEquals(const Properties other) const {
         return this.values == other.values;
     }
 
+    /** 
+     * Implementation of the binary "in" operator to determine if a property is
+     * defined for this properties object.
+     * Params:
+     *   key = The name of a property.
+     * Returns: True if the property exists in this properties object.
+     */
     bool opBinaryRight(string op)(string key) const if (op == "in") {
         return (key in this.values) != null;
     }
