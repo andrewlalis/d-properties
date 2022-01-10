@@ -7,6 +7,7 @@ import std.conv : to;
 import std.uni;
 import std.format : format;
 import std.regex : replaceAll, regex;
+import std.string : strip;
 import object : Exception;
 import d_properties.properties : Properties;
 
@@ -47,7 +48,7 @@ public Properties readFromFile(string filename) {
         throw new PropertiesParseException(filename, -1, "File not found.");
     }
     Properties props;
-    char[] content = replaceAll(readText(filename), regex(r"\r\n"), "\n").dup;
+    char[] content = replaceAll(readText(filename).strip(), regex(r"\r\n"), "\n").dup;
     uint lineNumber = 1;
     while (!content.empty) {
         while (content.front == '#' || content.front == '!') {
