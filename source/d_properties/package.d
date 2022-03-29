@@ -7,6 +7,7 @@ public import d_properties.reader;
 unittest {
     import std.format;
     import std.file;
+    import std.stdio;
 
     // First test all valid cases.
 
@@ -29,6 +30,14 @@ unittest {
     assert(p["my.value"] == "Hello world!");
     assert(p["another.value"] == "\"This is a quoted string\"");
     assert(p["This is an indented value"] == "12345");
+    assert(p.get!int("This is an indented value") == 12_345);
+    import std.conv : ConvException;
+    try {
+        p.get!char("This is an indented value");
+        assert(false); // We expect an exception to be thrown.
+    } catch (ConvException e) {
+        // All good.
+    }
     assert(p["multiline_2"] == "abc");
     assert("missing_key" !in p);
     assert(p.get("missing_key", "none") == "none");
@@ -50,6 +59,29 @@ unittest {
     assert(p["my.value"] == "Goodbye world!");
     p.addAll("test_cases/valid/1.properties");
     assert("language" in p);
+
+    // Test property subsets.
+    p = Properties("test_cases/valid/subs.properties");
+    auto one = p.getAll("one");
+    assert(one["a"] == "1");
+    assert(one["b"] == "2");
+    assert(one["c"] == "3");
+    assert(!one.has("name"));
+    assert(!one.has("url"));
+    auto two = p.getAll("two");
+    assert(two["name"] == "Andrew");
+    assert(two["url"] == "google.com");
+    assert(!two.has("a"));
+    assert(!two.has("b"));
+    assert(!two.has("c"));
+
+    struct TestOne {
+        int a, b, c;
+    }
+    auto oneStruct = p.getAll!TestOne("one");
+    assert(oneStruct.a == 1);
+    assert(oneStruct.b == 2);
+    assert(oneStruct.c == 3);
 
     // Then test all invalid cases, one-by-one, to check line number and/or message.
 

@@ -40,6 +40,16 @@ public struct Properties {
     }
 
     /** 
+     * Checks if the given property exists within this set.
+     * Params:
+     *   key = The property name.
+     * Returns: True if the property exists.
+     */
+    public bool has(string key) {
+        return cast(bool) (key in values);
+    }
+
+    /** 
      * Gets the value of a property, or returns the specified default value if
      * the given property doesn't exist.
      * Params:
@@ -51,6 +61,36 @@ public struct Properties {
     public string get(string key, string defaultValue=null) const {
         if (key !in values) return defaultValue;
         return values[key];
+    }
+
+    /** 
+     * Gets a property's value as a certain type. If the property does not
+     * exist, a `MissingPropertyException` is thrown. If the conversion could
+     * not be performed, a `std.conv.ConvException` is thrown.
+     * Params:
+     *   key = The property name.
+     * Returns: The value of the property.
+     */
+    public T get(T)(string key) const {
+        import std.conv : to;
+        if (key !in values) throw new MissingPropertyException(key);
+        return to!(T)(values[key]);
+    }
+
+    /** 
+     * Gets a property's value as a certain type. If the property does not
+     * exist, a default value is returned. If the conversion could not be
+     * performed, a `std.conv.ConvException` is thrown.
+     * Params:
+     *   key = The property name.
+     *   defaultValue = The default value to use, if no property exists.
+     * Returns: The value of the property, or the default value if the property
+     * doesn't exist.
+     */
+    public T get(T)(string key, T defaultValue) const {
+        import std.conv : to;
+        if (key !in values) return defaultValue;
+        return to!(T)(values[key]);
     }
 
     /** 
@@ -75,6 +115,51 @@ public struct Properties {
     public void addAll(string[] filenames ...) {
         auto p = Properties(filenames);
         this.addAll(p);
+    }
+
+    /** 
+     * Gets a new set of properties containing only those whose names match
+     * the given prefix.
+     * Params:
+     *   prefix = The prefix to get properties for.
+     * Returns: A new properties containing any properties that match the given
+     * prefix.
+     */
+    public Properties getAll(string prefix) {
+        import std.algorithm : startsWith;
+        Properties p;
+        foreach (name, value; this.values) {
+            if (name.startsWith(prefix) && name.length > prefix.length) {
+                size_t idx = prefix.length;
+                if (name[idx] == '.' && name.length > prefix.length + 1) idx++;
+                p[name[idx .. $]] = value;
+            }
+        }
+        return p;
+    }
+
+    /** 
+     * Gets a set of properties whose names match the given prefix, and uses
+     * them to populate a struct of the given type.
+     * Params:
+     *   prefix = The prefix to get properties for.
+     * Returns: An instance of the given struct type.
+     */
+    public T getAll(T)(string prefix) {
+        static if (!__traits(isPOD, T)) {
+            assert(0, "Only Plain Old Data structs may be used to get all.");
+        }
+        import std.traits;
+        import std.conv : to;
+        auto props = getAll(prefix);
+        T t;
+        foreach (member; __traits(allMembers, T)) {
+            if (props.has(member)) {
+                alias membertype = typeof(mixin("T()."~member));
+                __traits(getMember, t, member) = to!(membertype)(props[member]);
+            }
+        }
+        return t;
     }
 
     /** 
