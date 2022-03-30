@@ -119,7 +119,10 @@ public struct Properties {
 
     /** 
      * Gets a new set of properties containing only those whose names match
-     * the given prefix.
+     * the given prefix. Note that if you use `.` as a separator between the
+     * prefix and sub-properties, it will be removed. For example, `getAll("a")`
+     * would return a property named `"b"` instead of `".b"`, assuming a full
+     * name of `"a.b"`.
      * Params:
      *   prefix = The prefix to get properties for.
      * Returns: A new properties containing any properties that match the given
@@ -146,17 +149,27 @@ public struct Properties {
      * Returns: An instance of the given struct type.
      */
     public T getAll(T)(string prefix) {
+        return getAll(prefix).as!T;
+    }
+
+    /** 
+     * Converts this set of properties into the given struct type, matching
+     * any properties to their equivalent members in the struct. Note that you
+     * must ensure that all members may be converted from a `string` using
+     * `std.conv.to`.
+     * Returns: An instance of the given struct type.
+     */
+    public T as(T)() {
         static if (!__traits(isPOD, T)) {
             assert(0, "Only Plain Old Data structs may be used to get all.");
         }
         import std.traits;
         import std.conv : to;
-        auto props = getAll(prefix);
         T t;
         foreach (member; __traits(allMembers, T)) {
-            if (props.has(member)) {
+            if (this.has(member)) {// TODO: Better name inference.
                 alias membertype = typeof(mixin("T()."~member));
-                __traits(getMember, t, member) = to!(membertype)(props[member]);
+                __traits(getMember, t, member) = to!(membertype)(this.values[member]);
             }
         }
         return t;
