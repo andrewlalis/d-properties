@@ -8,5 +8,8 @@
 	"name": "d-properties",
 	"homepage": "https://github.com/andrewlalis/d-properties",
 	"targetType": "library",
-	"targetName": "d-properties"
+	"targetName": "d-properties",
+	"buildRequirements": [
+		"allowWarnings"
+	]
 }
