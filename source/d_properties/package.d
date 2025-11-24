@@ -60,6 +60,16 @@ unittest {
     p.addAll("test_cases/valid/1.properties");
     assert("language" in p);
 
+    // Escape handling tests for 1.properties
+    auto p1 = Properties("test_cases/valid/1.properties");
+    assert(p1["esc_colon"] == "foo:bar");
+    assert(p1["esc_equals"] == "foo=bar");
+    assert(p1["esc_space"] == "foo bar");
+    assert(p1["esc_tab"] == "foo\tbar"); // literal TAB
+    assert(p1["esc_hash"] == "foo#bar");
+    assert(p1["esc_bang"] == "foo!bar");
+    assert(p1["mixed_escapes"] == "a =b:\t#!");
+
     // Test property subsets.
     p = Properties("test_cases/valid/subs.properties");
     auto one = p.getAll("one");

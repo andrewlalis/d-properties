@@ -143,45 +143,129 @@ private string parseKey(ref char[] content, string filename, ref uint lineNumber
  *   lineNumber = The current line number.
  * Returns: The value that was parsed.
  */
-private string parseValue(ref char[] content, string filename, ref uint lineNumber) {
+private string parseValue(ref char[] content, string filename, ref uint lineNumber)
+{
     dchar[] valueChars = [];
     bool valueFound = false;
-    while (!valueFound) {
-        if (content.empty) { // If we've reached the end of the file, return this as the last value.
+
+    while (!valueFound)
+    {
+        // If we've reached the end of the file, return this as the last value.
+        if (content.empty)
+        {
             return to!string(valueChars);
         }
+
         dchar c = content.front;
         content.popFront;
+
         // Check for some sort of escape sequence.
-        if (c == '\\') {
-            if (content.empty) throw new PropertiesParseException(filename, lineNumber, "Unexpected end of file while parsing escape sequence.");
+        if (c == '\\')
+        {
+            if (content.empty)
+            {
+                throw new PropertiesParseException(
+                    filename,
+                    lineNumber,
+                    "Unexpected end of file while parsing escape sequence."
+                );
+            }
+
             dchar next = content.front;
             content.popFront;
-            if (next == '\\') {
+
+            // Java-style escapes in values
+            switch (next)
+            {
+            case '\\':
+                // Escaped backslash: "\\" -> "\"
                 valueChars ~= '\\';
-            } else if (next == '\n') {
+                break;
+
+            case '\n':
+                // Line continuation: "\" at end of line
+                // Skip newline and leading spaces/tabs on the next line.
                 lineNumber++;
-                do {
-                    c = content.front;
-                    if (c == ' ' || c == '\t') content.popFront;
-                } while (c == ' ' || c == '\t');
-            } else if (next == 'u') {
+                while (!content.empty)
+                {
+                    dchar look = content.front;
+                    if (look == ' ' || look == '\t')
+                    {
+                        content.popFront;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                break;
+
+            case 't':
+                // "\t" -> TAB character
+                valueChars ~= '\t';
+                break;
+
+            case 'r':
+                // "\r" -> carriage return
+                valueChars ~= '\r';
+                break;
+
+            case 'n':
+                // "\n" inside value -> newline character
+                valueChars ~= '\n';
+                break;
+
+            case 'f':
+                // "\f" -> form feed
+                valueChars ~= '\f';
+                break;
+
+            case 'u':
+                // Keep "\uXXXX" sequence as-is (library behaviour)
                 valueChars ~= '\\';
                 valueChars ~= 'u';
-                for (int i = 0; i < 4; i++) {
-                    if (content.empty || (!isAlphaNum(content.front))) throw new PropertiesParseException(filename, lineNumber, "Invalid unicode sequence.");
+                foreach (i; 0 .. 4)
+                {
+                    if (content.empty || !isAlphaNum(content.front))
+                    {
+                        throw new PropertiesParseException(
+                            filename,
+                            lineNumber,
+                            "Invalid unicode sequence."
+                        );
+                    }
                     valueChars ~= content.front;
                     content.popFront;
                 }
-            } else {
-                throw new Error("Unknown escape sequence: \"\\" ~ to!string(next) ~ "\"");
+                break;
+
+            case ' ':
+            case ':':
+            case '=':
+            case '#':
+            case '!':
+                // Escaped separator / comment marker / space: keep literal char
+                valueChars ~= next;
+                break;
+
+            default:
+                // Unknown escape: keep as-is "\X" instead of throwing
+                valueChars ~= '\\';
+                valueChars ~= next;
+                break;
             }
-        } else if (c == '\n') {
+        }
+        else if (c == '\n')
+        {
+            // End of this value
             valueFound = true;
             lineNumber++;
-        } else {
+        }
+        else
+        {
             valueChars ~= c;
         }
     }
+
     return to!string(valueChars);
 }
